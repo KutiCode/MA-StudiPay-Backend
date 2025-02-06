@@ -19,19 +19,15 @@ def register_user():
     if User.query.filter_by(matrikelnumber=data["matrikelnumber"]).first():
         return jsonify({"message": "Matrikelnummer existiert bereits"}), 400
 
-    # Hashing von Passwort und PIN
-    hashed_password = generate_password_hash(data["password"])
-    hashed_pin = generate_password_hash(data["securePin"])
-
     # Benutzer erstellen
     new_user = User(
         matrikelnumber=data["matrikelnumber"],
         lastName=data["lastName"],
         firstName=data["firstName"],
-        password=hashed_password,
+        password=data["password"],
         accountNumber=data["accountNumber"],
         balance=0.0,
-        securePin=hashed_pin
+        securePin=data["securePin"]
     )
 
     try:
