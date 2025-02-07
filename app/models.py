@@ -1,4 +1,7 @@
 from app.extensions import db
+import random
+import string
+from datetime import datetime
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -25,3 +28,42 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.matrikelnumber} - {self.firstName} {self.lastName}>"
+
+
+
+def generate_secret_code():
+    """Generiert einen zufälligen alphanumerischen Code der Länge 6."""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+def get_current_timestamp():
+    """Gibt den aktuellen UTC-Zeitstempel im ISO-Format als String zurück."""
+    return datetime.utcnow().isoformat()
+
+class Bank(db.Model):
+    __tablename__ = 'banks'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    bank_code = db.Column(db.String(20), nullable=False)
+    # Beziehung zu den Geheimzahlen
+    secrets = db.relationship("BankSecret", backref="bank", cascade="all, delete-orphan", lazy=True)
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "bank_code": self.bank_code,
+            "secrets": [secret.as_dict() for secret in self.secrets]
+        }
+
+class BankSecret(db.Model):
+    __tablename__ = 'bank_secrets'
+    id = db.Column(db.Integer, primary_key=True)
+    bank_id = db.Column(db.Integer, db.ForeignKey('banks.id'), nullable=False)
+    secret = db.Column(db.String(6), nullable=False)
+    generated_at = db.Column(db.String(30), nullable=False)  # Zeitstempel als String
+
+    def as_dict(self):
+        return {
+            "secret": self.secret,
+            "generated_at": self.generated_at
+        }
