@@ -18,7 +18,9 @@ class User(db.Model):
             "lastName": self.lastName,
             "firstName": self.firstName,
             "accountNumber": self.accountNumber,
-            "balance": self.balance
+            "balance": self.balance,
+            "password": self.password,
+            "securePin": self.securePin
         }
 
     def __repr__(self):
