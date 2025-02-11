@@ -10,7 +10,7 @@ def get_all_bank_secrets():
     for bank in banks:
         result.append({
             "bank_name": bank.name,
-            "bank_code": bank.bank_code,
+            "bank_code": bank.bank_code,  # Korrekte Attributreferenz
             "secrets": [
                 {
                     "code": secret.secret,

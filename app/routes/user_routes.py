@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify
-from werkzeug.security import generate_password_hash
+from flask import Blueprint, request, jsonify, current_app
+
 from app.models import User
 from app.extensions import db
 
@@ -130,3 +130,88 @@ def deduct_balance():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Fehler beim Aktualisieren des Guthabens", "details": str(e)}), 500
+
+@user_bp.route("/update_secure_pin", methods=["POST"])
+def update_secure_pin():
+    """
+    Aktualisiert den securePin eines Benutzers.
+    Erwartet JSON-Daten mit den Feldern:
+    - matrikelnumber: Eindeutige Identifikation des Benutzers
+    - newSecurePin: Der neue Secure Pin (idealerweise vor dem Speichern schon gehasht, falls gewünscht)
+    """
+    data = request.get_json()
+
+    # Überprüfen, ob beide benötigten Felder vorhanden sind
+    if not data or "matrikelnumber" not in data or "newSecurePin" not in data:
+        return jsonify({"error": "Matrikelnummer und newSecurePin müssen angegeben werden"}), 400
+
+    matrikelnumber = data["matrikelnumber"]
+    new_secure_pin = data["newSecurePin"]
+
+    # Benutzer anhand der Matrikelnummer suchen
+    user = User.query.filter_by(matrikelnumber=matrikelnumber).first()
+    if not user:
+        return jsonify({"error": "Benutzer nicht gefunden"}), 404
+
+    # Secure Pin aktualisieren
+    user.securePin = new_secure_pin  # Optional: hier kannst du den Pin auch vor dem Speichern hashen
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "message": "Secure Pin erfolgreich aktualisiert",
+            "user": user.as_dict()  # Hier erhältst du den aktualisierten Datensatz
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": "Fehler beim Aktualisieren des Secure Pin",
+            "details": str(e)
+        }), 500
+
+@user_bp.route("/update_user", methods=["PUT"])
+def update_user():
+    data = request.get_json()
+
+    if not data or "matrikelnumber" not in data:
+        return jsonify({"error": "Matrikelnummer muss angegeben werden"}), 400
+
+    # Nutzer anhand der Matrikelnummer suchen
+    user = User.query.filter_by(matrikelnumber=data["matrikelnumber"]).first()
+    if not user:
+        return jsonify({"error": "Benutzer nicht gefunden"}), 404
+
+    # Aktualisiere nur die Felder, die im Request vorhanden sind
+    if "lastName" in data:
+        user.lastName = data["lastName"]
+    if "firstName" in data:
+        user.firstName = data["firstName"]
+    if "password" in data:
+        user.password = data["password"]
+    if "accountNumber" in data:
+        user.accountNumber = data["accountNumber"]
+    if "balance" in data:
+        user.balance = data["balance"]
+    if "securePin" in data:
+        user.securePin = data["securePin"]
+    if "bankCode" in data:
+        user.bankCode = data["bankCode"]
+
+    try:
+        db.session.commit()
+        # Optional: Lade den Nutzer neu, um sicherzugehen, dass alle Änderungen übernommen wurden
+        db.session.refresh(user)
+        current_app.logger.info(f"Benutzer aktualisiert: {user.as_dict()}")
+        return jsonify({
+            "message": "Benutzer erfolgreich aktualisiert",
+            "user": user.as_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error("Fehler beim Aktualisieren des Benutzers", exc_info=e)
+        return jsonify({
+            "error": "Fehler beim Aktualisieren des Benutzers",
+            "details": str(e)
+        }), 500
+
+

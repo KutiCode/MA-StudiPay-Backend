@@ -11,26 +11,22 @@ from app.models import Bank, BankSecret, generate_secret_code, get_current_times
 from app.extensions import db
 
 def regenerate_bank_secrets():
-    """
-    Für jede Bank:
-      - Lösche alle bestehenden Geheimzahlen.
-      - Generiere 6 neue Geheimzahlen mit jeweils aktuellem Zeitstempel.
-    """
-    # Nutze den App-Kontext, um auf die Datenbank zuzugreifen.
-    from app import create_app
+    from app import create_app  # Hole dir deine Flask-App
     app = create_app()
     with app.app_context():
         banks = Bank.query.all()
         for bank in banks:
-            # Bestehende Geheimzahlen löschen
-            BankSecret.query.filter_by(bank_id=bank.id).delete()
-            # 6 neue Geheimzahlen einfügen
+            # Statt BankSecret.query.filter_by(bank_id=bank.id) nutzen wir bankCode:
+            BankSecret.query.filter_by(bank_code=bank.bankCode).delete()
             for _ in range(6):
+                secret_code = generate_secret_code()
+                timestamp = get_current_timestamp()
+                # Hier wird bankCode verwendet, nicht bank_id
                 new_secret = BankSecret(
-                    bank_id=bank.id,
-                    secret=generate_secret_code(),
-                    generated_at=get_current_timestamp()
+                    bank_code=bank.bankCode,
+                    secret=secret_code,
+                    generated_at=timestamp
                 )
                 db.session.add(new_secret)
         db.session.commit()
-        print("Alle Bank-Geheimzahlen wurden neu generiert mit aktuellem Zeitstempel.")
+        print("Alle Bank-Geheimzahlen wurden neu generiert.")
