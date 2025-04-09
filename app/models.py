@@ -5,6 +5,7 @@ from datetime import datetime
 
 from app.extensions import db
 
+
 class User(db.Model):
     __tablename__ = 'users'
     matrikelnumber = db.Column(db.String(10), primary_key=True, unique=True, nullable=False)
@@ -15,6 +16,16 @@ class User(db.Model):
     balance = db.Column(db.Float, default=0.0)
     securePin = db.Column(db.String(6), nullable=False)
     bank_code = db.Column(db.String(20), db.ForeignKey('banks.bank_code'), nullable=True)
+
+    # Neue Felder:
+    daily_transaction_count = db.Column(db.Integer, default=0)
+    # Speichere das Datum der letzten erfolgreichen Transaktion im Format "yyyy-MM-dd"
+    last_transaction_date = db.Column(db.String(10), nullable=True)
+    # Zähler, wie oft eine Transaktion aufgrund eines hohen Risikos abgebrochen wurde
+    high_risk_aborted_count = db.Column(db.Integer, default=0)
+
+    last_transaction_risk_value = db.Column(db.Integer,default = 0)
+
     # Beziehung, falls benötigt:
     bank = db.relationship("Bank", backref=db.backref("users", lazy=True))
 

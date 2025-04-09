@@ -172,7 +172,7 @@ def update_secure_pin():
 @user_bp.route("/update_user", methods=["PUT"])
 def update_user():
     data = request.get_json()
-
+    current_app.logger.info(f"Update User Payload: {data}")
     if not data or "matrikelnumber" not in data:
         return jsonify({"error": "Matrikelnummer muss angegeben werden"}), 400
 
@@ -194,8 +194,8 @@ def update_user():
         user.balance = data["balance"]
     if "securePin" in data:
         user.securePin = data["securePin"]
-    if "bankCode" in data:
-        user.bankCode = data["bankCode"]
+    if "bank_code" in data:
+        user.bank_code = data["bank_code"]
 
     try:
         db.session.commit()

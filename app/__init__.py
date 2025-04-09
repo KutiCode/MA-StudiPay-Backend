@@ -21,7 +21,7 @@ def create_app():
     with app.app_context():
         db.create_all()  # Erstelle alle Tabellen, falls nicht vorhanden
         prepopulate_banks(app)
-        start_secret_regeneration_scheduler()  # Starte den Scheduler
+        start_secret_regeneration_scheduler(app)  # Starte den Scheduler
 
     return app
 
