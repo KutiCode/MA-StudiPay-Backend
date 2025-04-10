@@ -11,17 +11,17 @@ def register_user():
     data = request.get_json()
 
     # Prüfen, ob alle Felder vorhanden sind
-    required_fields = ["matrikelnumber", "lastName", "firstName", "password", "accountNumber", "securePin"]
+    required_fields = ["matriculationNumber", "lastName", "firstName", "password", "accountNumber", "securePin"]
     if not all(field in data for field in required_fields):
-        return jsonify({"error": "Fehlende Daten"}), 400
+        return jsonify({"error": "Fehlende Daten"}), 404
 
     # Prüfen, ob die Matrikelnummer bereits existiert
-    if User.query.filter_by(matrikelnumber=data["matrikelnumber"]).first():
+    if User.query.filter_by(matriculationNumber=data["matriculationNumber"]).first():
         return jsonify({"message": "Matrikelnummer existiert bereits"}), 400
 
     # Benutzer erstellen
     new_user = User(
-        matrikelnumber=data["matrikelnumber"],
+        matriculationNumber=data["matriculationNumber"],
         lastName=data["lastName"],
         firstName=data["firstName"],
         password=data["password"],
@@ -41,12 +41,12 @@ def register_user():
 @user_bp.route("/user", methods=["GET"])
 def get_user():
     """Abrufen eines Benutzers anhand der Matrikelnummer"""
-    matrikelnumber = request.args.get("matrikelnumber")
+    matriculationNumber = request.args.get("matriculationNumber")
 
-    if not matrikelnumber:
+    if not matriculationNumber:
         return jsonify({"error": "Matrikelnummer muss angegeben werden"}), 400
 
-    user = User.query.filter_by(matrikelnumber=matrikelnumber).first()
+    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
 
     if user:
         return jsonify({
@@ -72,14 +72,14 @@ def add_balance():
     data = request.get_json()
 
     # Prüfen, ob alle benötigten Felder vorhanden sind
-    if not data or "matrikelnumber" not in data or "amount" not in data:
+    if not data or "matriculationNumber" not in data or "amount" not in data:
         return jsonify({"error": "Matrikelnummer und Betrag müssen angegeben werden"}), 400
 
-    matrikelnumber = data["matrikelnumber"]
+    matriculationNumber = data["matriculationNumber"]
     amount = data["amount"]
 
     # Prüfen, ob der Benutzer existiert
-    user = User.query.filter_by(matrikelnumber=matrikelnumber).first()
+    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
         return jsonify({"error": "Benutzer nicht gefunden"}), 404
 
@@ -103,14 +103,14 @@ def deduct_balance():
     data = request.get_json()
 
     # Prüfen, ob alle benötigten Felder vorhanden sind
-    if not data or "matrikelnumber" not in data or "amount" not in data:
+    if not data or "matriculationNumber" not in data or "amount" not in data:
         return jsonify({"error": "Matrikelnummer und Betrag müssen angegeben werden"}), 400
 
-    matrikelnumber = data["matrikelnumber"]
+    matriculationNumber = data["matriculationNumber"]
     amount = float(data["amount"])
 
     # Prüfen, ob der Benutzer existiert
-    user = User.query.filter_by(matrikelnumber=matrikelnumber).first()
+    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
         return jsonify({"error": "Benutzer nicht gefunden"}), 404
 
@@ -136,20 +136,20 @@ def update_secure_pin():
     """
     Aktualisiert den securePin eines Benutzers.
     Erwartet JSON-Daten mit den Feldern:
-    - matrikelnumber: Eindeutige Identifikation des Benutzers
+    - matriculationNumber: Eindeutige Identifikation des Benutzers
     - newSecurePin: Der neue Secure Pin (idealerweise vor dem Speichern schon gehasht, falls gewünscht)
     """
     data = request.get_json()
 
     # Überprüfen, ob beide benötigten Felder vorhanden sind
-    if not data or "matrikelnumber" not in data or "newSecurePin" not in data:
+    if not data or "matriculationNumber" not in data or "newSecurePin" not in data:
         return jsonify({"error": "Matrikelnummer und newSecurePin müssen angegeben werden"}), 400
 
-    matrikelnumber = data["matrikelnumber"]
+    matriculationNumber = data["matriculationNumber"]
     new_secure_pin = data["newSecurePin"]
 
     # Benutzer anhand der Matrikelnummer suchen
-    user = User.query.filter_by(matrikelnumber=matrikelnumber).first()
+    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
         return jsonify({"error": "Benutzer nicht gefunden"}), 404
 
@@ -173,11 +173,11 @@ def update_secure_pin():
 def update_user():
     data = request.get_json()
     current_app.logger.info(f"Update User Payload: {data}")
-    if not data or "matrikelnumber" not in data:
+    if not data or "matriculationNumber" not in data:
         return jsonify({"error": "Matrikelnummer muss angegeben werden"}), 400
 
     # Nutzer anhand der Matrikelnummer suchen
-    user = User.query.filter_by(matrikelnumber=data["matrikelnumber"]).first()
+    user = User.query.filter_by(matriculationNumber=data["matriculationNumber"]).first()
     if not user:
         return jsonify({"error": "Benutzer nicht gefunden"}), 404
 

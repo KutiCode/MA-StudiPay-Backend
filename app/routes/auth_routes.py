@@ -12,12 +12,12 @@ def verify_transaction_endpoint():
     if not data:
         return jsonify({"error": "Keine Daten gesendet"}), 400
 
-    matrikelnumber = data.get("matrikelnumber")
+    matriculationNumber = data.get("matriculationNumber")
     amount = data.get("amount")
-    if not matrikelnumber or amount is None:
-        return jsonify({"error": "matrikelnumber und amount müssen angegeben werden"}), 400
+    if not matriculationNumber or amount is None:
+        return jsonify({"error": "matriculationNumber und amount müssen angegeben werden"}), 400
 
-    user = User.query.filter_by(matrikelnumber=matrikelnumber).first()
+    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
         return jsonify({"error": "Benutzer nicht gefunden"}), 400
 

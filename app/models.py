@@ -8,7 +8,7 @@ from app.extensions import db
 
 class User(db.Model):
     __tablename__ = 'users'
-    matrikelnumber = db.Column(db.String(10), primary_key=True, unique=True, nullable=False)
+    matriculationNumber = db.Column(db.String(10), primary_key=True, unique=True, nullable=False)
     lastName = db.Column(db.String(80), nullable=False)
     firstName = db.Column(db.String(80), nullable=False)
     password = db.Column(db.String(256), nullable=False)
@@ -31,7 +31,7 @@ class User(db.Model):
 
     def as_dict(self):
         data = {
-            "matrikelnumber": self.matrikelnumber,
+            "matriculationNumber": self.matriculationNumber,
             "lastName": self.lastName,
             "firstName": self.firstName,
             "accountNumber": self.accountNumber,
@@ -48,7 +48,7 @@ class User(db.Model):
 
 
     def __repr__(self):
-        return f"<User {self.matrikelnumber} - {self.firstName} {self.lastName}>"
+        return f"<User {self.matriculationNumber} - {self.firstName} {self.lastName}>"
 
 
 def generate_secret_code():

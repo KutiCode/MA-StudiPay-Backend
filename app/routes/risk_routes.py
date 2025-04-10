@@ -11,11 +11,11 @@ def update_risk_params():
         return jsonify({"error": "No data provided"}), 400
 
     # Benutzer anhand der Matrikelnummer identifizieren
-    matrikelnumber = data.get("matrikelnumber")
-    if not matrikelnumber:
-        return jsonify({"error": "matrikelnumber is required"}), 400
+    matriculationNumber = data.get("matriculationNumber")
+    if not matriculationNumber:
+        return jsonify({"error": "matriculationNumber is required"}), 400
 
-    user = User.query.filter_by(matrikelnumber=matrikelnumber).first()
+    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
         return jsonify({"error": "User not found"}), 404
 
