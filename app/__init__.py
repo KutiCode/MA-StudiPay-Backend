@@ -6,6 +6,13 @@ from app.routes import init_app as init_routes
 from app.scheduler import start_secret_regeneration_scheduler
 import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(process)d %(threadName)s: %(message)s'
+)
+
+logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+logging.getLogger('apscheduler.scheduler').setLevel(logging.INFO)
 
 def create_app():
     app = Flask(__name__)
