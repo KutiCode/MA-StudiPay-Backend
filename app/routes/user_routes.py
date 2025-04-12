@@ -66,70 +66,10 @@ def get_all_users():
     return jsonify({"users": user_list}), 200
 
 
-@user_bp.route("/add_balance", methods=["POST"])
-def add_balance():
-    """Erhöht das Guthaben eines Nutzers und gibt die neuen Daten zurück"""
-    data = request.get_json()
-
-    # Prüfen, ob alle benötigten Felder vorhanden sind
-    if not data or "matriculationNumber" not in data or "amount" not in data:
-        return jsonify({"error": "Matrikelnummer und Betrag müssen angegeben werden"}), 400
-
-    matriculationNumber = data["matriculationNumber"]
-    amount = data["amount"]
-
-    # Prüfen, ob der Benutzer existiert
-    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
-    if not user:
-        return jsonify({"error": "Benutzer nicht gefunden"}), 404
-
-    # Guthaben aktualisieren
-    try:
-        user.balance += float(amount)
-        db.session.commit()
-        return jsonify({
-            "message": "Guthaben erfolgreich aktualisiert",
-            "new_balance": user.balance,
-            "user": user.as_dict()
-        }), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": "Fehler beim Aktualisieren des Guthabens", "details": str(e)}), 500
 
 
-@user_bp.route("/deduct_balance", methods=["POST"])
-def deduct_balance():
-    """Reduziert das Guthaben eines Nutzers und gibt die neuen Daten zurück"""
-    data = request.get_json()
 
-    # Prüfen, ob alle benötigten Felder vorhanden sind
-    if not data or "matriculationNumber" not in data or "amount" not in data:
-        return jsonify({"error": "Matrikelnummer und Betrag müssen angegeben werden"}), 400
 
-    matriculationNumber = data["matriculationNumber"]
-    amount = float(data["amount"])
-
-    # Prüfen, ob der Benutzer existiert
-    user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
-    if not user:
-        return jsonify({"error": "Benutzer nicht gefunden"}), 404
-
-    # Prüfen, ob genügend Guthaben vorhanden ist
-    if user.balance < amount:
-        return jsonify({"error": "Nicht genug Guthaben vorhanden", "current_balance": user.balance}), 400
-
-    # Guthaben reduzieren
-    try:
-        user.balance -= amount
-        db.session.commit()
-        return jsonify({
-            "message": "Betrag erfolgreich abgebucht",
-            "new_balance": user.balance,
-            "user": user.as_dict()
-        }), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": "Fehler beim Aktualisieren des Guthabens", "details": str(e)}), 500
 
 @user_bp.route("/update_secure_pin", methods=["POST"])
 def update_secure_pin():
