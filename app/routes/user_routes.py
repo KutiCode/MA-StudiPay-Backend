@@ -33,7 +33,7 @@ def register_user():
     try:
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "Benutzer erfolgreich registriert"}), 201
+        return jsonify({"message": "Benutzer erfolgreich registriert"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Fehler beim Speichern der Daten", "details": str(e)}), 500
@@ -64,11 +64,6 @@ def get_all_users():
     user_list = [user.as_dict() for user in users]  # Benutzer in JSON umwandeln
 
     return jsonify({"users": user_list}), 200
-
-
-
-
-
 
 
 @user_bp.route("/update_secure_pin", methods=["POST"])

@@ -57,7 +57,7 @@ def generate_secret_code():
 
 def get_current_timestamp():
     """Gibt den aktuellen UTC-Zeitstempel im ISO-Format als String zurück."""
-    return datetime.utcnow().isoformat()
+    return datetime.now().isoformat()
 
 
 
