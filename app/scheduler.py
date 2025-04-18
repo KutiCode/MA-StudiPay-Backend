@@ -46,7 +46,7 @@ def start_secret_regeneration_scheduler(app):
         scheduler.add_job(
             func=regenerate_bank_secrets,
             trigger='interval',
-            minutes=1,
+            minutes=3,
             args=[app],
             id='regenerate_bank_secrets_job',
             replace_existing=True

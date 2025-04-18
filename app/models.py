@@ -92,3 +92,12 @@ class BankSecret(db.Model):
             "generated_at": self.generated_at
         }
 
+
+
+from datetime import datetime
+from app.extensions import db
+
+class ResetInfo(db.Model):
+    __tablename__ = "reset_info"
+    id = db.Column(db.Integer, primary_key=True)
+    last_reset = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

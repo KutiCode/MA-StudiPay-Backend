@@ -35,14 +35,15 @@ def verify_transaction(user, amount):
     # 1. Überprüfe, ob der Nutzer genügend Guthaben hat
     if user.balance < amount:
         return False, "Nicht genügend Guthaben"
-
+    
     # 2. Falls der tägliche Transaktionszähler unter 5 liegt, ist keine zusätzliche Prüfung nötig
-    if user.daily_transaction_count < 5:
+    if user.daily_transaction_count > 5:
         return True, "Transaktion autorisiert"
-
+    
     if user.last_transaction_risk_value > 80:
         if user.high_risk_aborted_count > 0:
-            return False
+            return False, "Risiko ist zu hoch!"
+
 
     # 3. Wenn der Zähler 5 oder mehr beträgt, überprüfe den letzten Transaktionstag
     today = datetime.utcnow().date()

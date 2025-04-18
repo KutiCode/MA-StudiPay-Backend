@@ -1,6 +1,8 @@
+from datetime import timedelta, datetime
+
 from flask import Blueprint, request, jsonify, current_app
 
-from app.models import User
+from app.models import User, ResetInfo
 from app.extensions import db
 
 user_bp = Blueprint("user", __name__, url_prefix="/api")
@@ -60,6 +62,24 @@ def get_user():
 @user_bp.route("/users", methods=["GET"])
 def get_all_users():
     """Gibt alle Benutzer in der Datenbank zurück"""
+
+    # --- Reset‑Logik ---
+    reset = ResetInfo.query.get(1)
+    now = datetime.utcnow()
+
+    # Falls noch kein Eintrag existiert, legen wir ihn an
+    if not reset:
+        reset = ResetInfo(id=1, last_reset=now)
+        db.session.add(reset)
+        db.session.commit()
+    # Wenn seit der letzten Rücksetzung 24h rum sind, Counter zurücksetzen
+    elif now - reset.last_reset >= timedelta(hours=24):
+        # Massen‑Update aller Nutzer
+        User.query.update({User.daily_transaction_count: 0})
+        # Reset‑Zeit auf jetzt setzen
+        reset.last_reset = now
+        db.session.commit()
+
     users = User.query.all()  # Alle Benutzer abrufen
     user_list = [user.as_dict() for user in users]  # Benutzer in JSON umwandeln
 
