@@ -1,88 +1,126 @@
-from flask import Blueprint, jsonify,request
-from app.models import Bank
-from app.models import User
+from flask import Blueprint, jsonify, request
+from app.models import Bank, User
 from app.extensions import db
+
+# Create a Blueprint for bank-related API endpoints under the '/api' prefix
 bank_bp = Blueprint("bank", __name__, url_prefix="/api")
 
 @bank_bp.route("/all_secrets", methods=["GET"])
 def get_all_bank_secrets():
+    """
+    Retrieve all banks along with their secret codes.
+
+    Returns a JSON object containing a list of banks, each with:
+      - bank_name: Name of the bank
+      - bank_code: Unique identifier for the bank
+      - secrets: List of secret code records, each with:
+          - code: The secret code string
+          - generated_at: Timestamp when the code was generated
+    """
+    # Query all Bank records from the database
     banks = Bank.query.all()
     result = []
+
+    # Build the response list
     for bank in banks:
         result.append({
             "bank_name": bank.name,
-            "bank_code": bank.bank_code,  # Korrekte Attributreferenz
+            "bank_code": bank.bank_code,
             "secrets": [
                 {
                     "code": secret.secret,
                     "generated_at": secret.generated_at
                 }
-                for secret in bank.secrets
+                for secret in bank.secrets  # Access related BankSecret entries
             ]
         })
+
+    # Return the compiled list of banks and their secrets
     return jsonify({"banks": result}), 200
 
 @bank_bp.route("/add_balance", methods=["POST"])
 def add_balance():
-    """Erhöht das Guthaben eines Nutzers und gibt die neuen Daten zurück"""
+    """
+    Increase a user's account balance.
+
+    Expects JSON payload with:
+      - matriculationNumber: User's unique matriculation ID (required)
+      - amount: Amount to add to the balance (required, numeric)
+
+    Returns the updated user record and new balance.
+    """
     data = request.get_json()
 
-    # Prüfen, ob alle benötigten Felder vorhanden sind
+    # Validate required input fields
     if not data or "matriculationNumber" not in data or "amount" not in data:
-        return jsonify({"error": "Matrikelnummer und Betrag müssen angegeben werden"}), 400
+        return jsonify({"error": "matriculationNumber and amount are required"}), 400
 
     matriculationNumber = data["matriculationNumber"]
     amount = data["amount"]
 
-    # Prüfen, ob der Benutzer existiert
+    # Look up the user by matriculation number
     user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
-        return jsonify({"error": "Benutzer nicht gefunden"}), 404
+        return jsonify({"error": "User not found"}), 404
 
-    # Guthaben aktualisieren
     try:
+        # Add the specified amount to the user's balance
         user.balance += float(amount)
         db.session.commit()
+
+        # Return success response with updated balance
         return jsonify({
-            "message": "Guthaben erfolgreich aktualisiert",
+            "message": "Balance updated successfully",
             "new_balance": user.balance,
             "user": user.as_dict()
         }), 200
     except Exception as e:
+        # Roll back on error and return details
         db.session.rollback()
-        return jsonify({"error": "Fehler beim Aktualisieren des Guthabens", "details": str(e)}), 500
-
+        return jsonify({"error": "Error updating balance", "details": str(e)}), 500
 
 @bank_bp.route("/deduct_balance", methods=["POST"])
 def deduct_balance():
-    """Reduziert das Guthaben eines Nutzers und gibt die neuen Daten zurück"""
+    """
+    Decrease a user's account balance.
+
+    Expects JSON payload with:
+      - matriculationNumber: User's unique matriculation ID (required)
+      - amount: Amount to deduct from the balance (required, numeric)
+
+    Checks that the user has sufficient funds before deduction.
+    Returns the updated user record and new balance.
+    """
     data = request.get_json()
 
-    # Prüfen, ob alle benötigten Felder vorhanden sind
+    # Validate required input fields
     if not data or "matriculationNumber" not in data or "amount" not in data:
-        return jsonify({"error": "Matrikelnummer und Betrag müssen angegeben werden"}), 400
+        return jsonify({"error": "matriculationNumber and amount are required"}), 400
 
     matriculationNumber = data["matriculationNumber"]
     amount = float(data["amount"])
 
-    # Prüfen, ob der Benutzer existiert
+    # Look up the user by matriculation number
     user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
-        return jsonify({"error": "Benutzer nicht gefunden"}), 404
+        return jsonify({"error": "User not found"}), 404
 
-    # Prüfen, ob genügend Guthaben vorhanden ist
+    # Ensure the user has enough balance to cover the deduction
     if user.balance < amount:
-        return jsonify({"error": "Nicht genug Guthaben vorhanden", "current_balance": user.balance}), 400
+        return jsonify({"error": "Insufficient balance", "current_balance": user.balance}), 400
 
-    # Guthaben reduzieren
     try:
+        # Subtract the specified amount from the user's balance
         user.balance -= amount
         db.session.commit()
+
+        # Return success response with updated balance
         return jsonify({
-            "message": "Betrag erfolgreich abgebucht",
+            "message": "Amount deducted successfully",
             "new_balance": user.balance,
             "user": user.as_dict()
         }), 200
     except Exception as e:
+        # Roll back on error and return details
         db.session.rollback()
-        return jsonify({"error": "Fehler beim Aktualisieren des Guthabens", "details": str(e)}), 500
+        return jsonify({"error": "Error updating balance", "details": str(e)}), 500
