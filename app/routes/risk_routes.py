@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models import User  # Stelle sicher, dass dein User-Modell die neuen Felder enthält
 from app.extensions import db
-
+from datetime import datetime
 risk_bp = Blueprint("risk", __name__, url_prefix="/api")
 
 @risk_bp.route("/update_risk_params", methods=["POST"])
@@ -23,11 +23,17 @@ def update_risk_params():
     if "dailyTransactionCount" in data:
         user.daily_transaction_count = data["dailyTransactionCount"]
     if "lastTransactionDate" in data:
-        user.last_transaction_date = data["lastTransactionDate"]
+        try:
+            user.last_transaction_date = datetime.fromisoformat(data["lastTransactionDate"])
+        except ValueError:
+            return jsonify({
+                "error": "Invalid date format for lastTransactionDate",
+                "details": "Expected ISO format, got %r" % data["lastTransactionDate"]
+            }), 407
     if "highRiskAbortedCount" in data:
         user.high_risk_aborted_count = data["highRiskAbortedCount"]
-    if "lastTransaktionRiskValue" in data:
-        user.last_transaction_risk_value = data["lastTransaktionRiskValue"]
+    if "lastTransactionRiskValue" in data:
+        user.last_transaction_risk_value = data["lastTransactionRiskValue"]
 
     try:
         db.session.commit()

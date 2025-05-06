@@ -13,7 +13,7 @@ def register_user():
     data = request.get_json()
 
     # Prüfen, ob alle Felder vorhanden sind
-    required_fields = ["matriculationNumber", "lastName", "firstName", "password", "accountNumber", "securePin"]
+    required_fields = ["matriculationNumber", "lastName", "firstName", "password", "accountNumber"]
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Fehlende Daten"}), 404
 
@@ -28,8 +28,7 @@ def register_user():
         firstName=data["firstName"],
         password=data["password"],
         accountNumber=data["accountNumber"],
-        balance=0.0,
-        securePin=data["securePin"]
+        balance=0.0
     )
 
     try:
@@ -61,29 +60,32 @@ def get_user():
 
 @user_bp.route("/users", methods=["GET"])
 def get_all_users():
-    """Gibt alle Benutzer in der Datenbank zurück"""
-
-    # --- Reset‑Logik ---
-    reset = ResetInfo.query.get(1)
     now = datetime.utcnow()
 
-    # Falls noch kein Eintrag existiert, legen wir ihn an
-    if not reset:
-        reset = ResetInfo(id=1, last_reset=now)
-        db.session.add(reset)
-        db.session.commit()
-    # Wenn seit der letzten Rücksetzung 24h rum sind, Counter zurücksetzen
-    elif now - reset.last_reset >= timedelta(hours=24):
-        # Massen‑Update aller Nutzer
-        User.query.update({User.daily_transaction_count: 0})
-        # Reset‑Zeit auf jetzt setzen
-        reset.last_reset = now
-        db.session.commit()
 
-    users = User.query.all()  # Alle Benutzer abrufen
-    user_list = [user.as_dict() for user in users]  # Benutzer in JSON umwandeln
+    existing = ResetInfo.query.get(1)
 
-    return jsonify({"users": user_list}), 200
+    if existing is None:
+
+        existing = ResetInfo(id=1, last_reset=now)
+        db.session.add(existing)
+
+
+    elif now - existing.last_reset >= timedelta(hours=24):
+        User.query.update(
+            {User.daily_transaction_count: 0},
+            synchronize_session='fetch'
+        )
+        existing.last_reset = now
+
+
+    db.session.commit()
+
+
+    users = User.query.all()
+    return jsonify({"users": [u.as_dict() for u in users]}), 200
+
+
 
 
 @user_bp.route("/update_secure_pin", methods=["POST"])

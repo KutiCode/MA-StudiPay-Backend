@@ -14,13 +14,13 @@ class User(db.Model):
     password = db.Column(db.String(256), nullable=False)
     accountNumber = db.Column(db.String(20), unique=True, nullable=False)
     balance = db.Column(db.Float, default=0.0)
-    securePin = db.Column(db.String(6), nullable=False)
+    securePin = db.Column(db.String(6), nullable=True)
     bank_code = db.Column(db.String(20), db.ForeignKey('banks.bank_code'), nullable=True)
 
     # Neue Felder:
     daily_transaction_count = db.Column(db.Integer, default=0)
     # Speichere das Datum der letzten erfolgreichen Transaktion im Format "yyyy-MM-dd"
-    last_transaction_date = db.Column(db.String(10), nullable=True)
+    last_transaction_date = db.Column(db.DateTime, nullable=True)
     # Zähler, wie oft eine Transaktion aufgrund eines hohen Risikos abgebrochen wurde
     high_risk_aborted_count = db.Column(db.Integer, default=0)
 
@@ -38,7 +38,12 @@ class User(db.Model):
             "balance": self.balance,
             "password": self.password,
             "securePin": self.securePin,
-            "bank_code": self.bank_code
+            "bank_code": self.bank_code,
+            "dailyTransactionCount": self.daily_transaction_count,
+            "lastTransactionDate": (self.last_transaction_date.isoformat()
+                                    if self.last_transaction_date else None),
+            "highRiskAbortedCount": self.high_risk_aborted_count,
+            "lastTransactionRiskValue": self.last_transaction_risk_value,
         }
         if self.bank:
             data["bank"] = self.bank.as_dict()

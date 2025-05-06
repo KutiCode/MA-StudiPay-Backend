@@ -10,16 +10,16 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api")
 def verify_transaction_endpoint():
     data = request.get_json()
     if not data:
-        return jsonify({"error": "Keine Daten gesendet"}), 400
+        return jsonify({"error": "Keine Daten gesendet"}), 401
 
     matriculationNumber = data.get("matriculationNumber")
     amount = data.get("amount")
     if not matriculationNumber or amount is None:
-        return jsonify({"error": "matriculationNumber und amount müssen angegeben werden"}), 400
+        return jsonify({"error": "matriculationNumber und amount müssen angegeben werden"}), 402
 
     user = User.query.filter_by(matriculationNumber=matriculationNumber).first()
     if not user:
-        return jsonify({"error": "Benutzer nicht gefunden"}), 400
+        return jsonify({"error": "Benutzer nicht gefunden"}), 404
 
     is_authorized, message = verify_transaction(user, float(amount))
     if is_authorized:
@@ -37,7 +37,7 @@ def verify_transaction(user, amount):
         return False, "Nicht genügend Guthaben"
     
     # 2. Falls der tägliche Transaktionszähler unter 5 liegt, ist keine zusätzliche Prüfung nötig
-    if user.daily_transaction_count > 5:
+    if user.daily_transaction_count < 5:
         return True, "Transaktion autorisiert"
     
     if user.last_transaction_risk_value > 80:
